@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi amorchito ❤️</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #2e001f, #000);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #text-overlay {
+            z-index: 10;
+            text-align: center;
+            pointer-events: none; /* Deja que los clics pasen al canvas si quieres */
+        }
+        #text-overlay h1 {
+            font-size: 3em;
+            text-shadow: 0 0 10px rgba(255,100,100,0.7);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="heartCanvas"></canvas>
+
+<div id="text-overlay">
+    <h1>ERES INCREIBLE</h1>
+    <p>Te amo millones ❤️</p>
+</div>
+
+<script>
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let particles = [];
+    const particleCount = 200; // Alto rendimiento con muchas partículas
+    const heartColors = ['#ff4d4d', '#ff1a1a', '#ff8080', '#e60000'];
+
+    // Ajustar el canvas a la ventana
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Clase Partícula
+    class Particle {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            this.x = Math.random() * width;
+            this.y = height + Math.random() * 100; // Empezar debajo
+            this.size = Math.random() * 15 + 5;
+            this.speedY = Math.random() * 2 + 1; // Velocidad de subida
+            this.speedX = Math.random() * 2 - 1; // Ligero balanceo
+            this.color = heartColors[Math.floor(Math.random() * heartColors.length)];
+            this.alpha = Math.random() * 0.5 + 0.5; // Opacidad
+        }
+
+        draw() {
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            
+            // Dibujar un corazón usando curvas de Bézier
+            const topCurveHeight = this.size * 0.3;
+            const x = this.x, y = this.y, s = this.size;
+            
+            ctx.moveTo(x, y + topCurveHeight);
+            // Curva superior izquierda
+            ctx.bezierCurveTo(x, y, x - s/2, y, x - s/2, y + topCurveHeight);
+            // Curva inferior izquierda hasta la punta
+            ctx.bezierCurveTo(x - s/2, y + s/2, x, y + s * 0.75, x, y + s);
+            // Curva inferior derecha desde la punta
+            ctx.bezierCurveTo(x, y + s * 0.75, x + s/2, y + s/2, x + s/2, y + topCurveHeight);
+            // Curva superior derecha
+            ctx.bezierCurveTo(x + s/2, y, x, y, x, y + topCurveHeight);
+            
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        update() {
+            this.y -= this.speedY;
+            this.x += Math.random() * 0.5 - 0.25; // Pequeño temblor natural
+
+            if (this.y < -this.size) { // Si sale por arriba
+                this.init(); // Reiniciar abajo
+            }
+        }
+    }
+
+    // Inicializar partículas
+    for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+    }
+
+    // Bucle de animación (Alto Rendimiento con requestAnimationFrame)
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Limpiar el canvas con un efecto de rastro suave (trail effect)
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(20, 0, 10, 0.2)'; // Fondo casi oscuro
+        ctx.fillRect(0, 0, width, height);
+
+        // Añadir resplandor (Glow effect) - Esto consume CPU pero se ve genial
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 50, 50, 0.5)';
+
+        for (let particle of particles) {
+            particle.update();
+            particle.draw();
+        }
+        
+        // Resetear sombras para el texto si se dibuja en canvas (aquí es HTML overlay)
+        ctx.shadowBlur = 0;
+    }
+
+    animate();
+
+</script>
+</body>
+</html>
